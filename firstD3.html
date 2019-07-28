@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style>
+			.svg-element { background-color: AliceBlue; }
+			.grid line {
+  				stroke: lightgrey;
+  				stroke-opacity: 0.7;
+  				shape-rendering: crispEdges;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
+		<script>
+			// Here's the data we'll be working with.	
+			hubble_data = [
+ 				{ nebulae: "NGC 6822", distance: 0.500, distance_error: 0.010,
+ 				velocity: 57, velocity_error: 2, },
+ 				{ nebulae: "NGC 221", distance: 0.763, distance_error: 0.024,
+ 				velocity: 200, velocity_error: 6, },
+ 				{ nebulae: "NGC 598", distance: 0.835, distance_error: 0.105,
+ 				velocity: 179, velocity_error: 3, },
+ 				{ nebulae: "NGC 4736", distance: 4.900, distance_error: 0.400,
+ 				velocity: 308, velocity_error: 1, },
+ 				{ nebulae: "NGC 5457", distance: 6.400, distance_error: 0.500,
+ 				velocity: 241, velocity_error: 2, },
+ 				{ nebulae: "NGC 4258", distance: 7.000, distance_error: 0.500,
+ 				velocity: 448, velocity_error: 3, },
+ 				{ nebulae: "NGC 5194", distance: 7.100, distance_error: 1.210,
+ 				velocity: 463, velocity_error: 3, },
+ 				{ nebulae: "NGC 4826", distance: 7.400, distance_error: 0.610,
+ 				velocity: 408, velocity_error: 4, },
+ 				{ nebulae: "NGC 3627", distance: 11.000, distance_error: 1.500,
+ 				velocity: 727, velocity_error: 3, },
+ 				{ nebulae: "NGC 7331", distance: 12.200, distance_error: 1.000,
+ 				velocity: 816, velocity_error: 1, },
+ 				{ nebulae: "NGC 4486", distance: 16.400, distance_error: 0.500,
+ 				velocity: 1307, velocity_error: 7, },
+ 				{ nebulae: "NGC 4649", distance: 16.800, distance_error: 1.200,
+ 				velocity: 1117, velocity_error: 6, },
+ 				{ nebulae: "NGC 4472", distance: 17.100, distance_error: 1.200,
+ 				velocity: 729, velocity_error: 2, } ];
+
+ 			// Firstly, set margins, and dimensions of the chart.
+			var margin = {top: 20, right: 20, bottom: 30, left: 40},
+ 				width = 640 - margin.left - margin.right,
+				height = 400 - margin.top - margin.bottom;
+
+			// Then, we append an svg to the div "container", with the attributes of height and width
+			var svg = d3.select("#container").append("svg")
+ 						.attr("height", height + margin.top + margin.bottom)
+ 						.attr("width", width + margin.left + margin.right)
+ 						.attr("class", "svg-element");
+
+ 			// We want to contain the chart inside the svg element, so we append a "g" (The D3 equivalent of a <div> element) onto the svg.
+ 			var chart = svg.append("g")
+ 						   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+ 			// Now that we have the container ready, we want to make sure that the data is scaled properly. Our data ranges from 0.5 to 17 Mpc. We want to scale it to fit within 0 to 400 pixels. 
+ 			// To do that, we need to give it a domain that it will map onto a range. First, let's give it a domain
+ 			var xScale = d3.scaleLinear()
+ 						   .range([0, width]);
+ 			var yScale = d3.scaleLinear()
+ 						   .range([height, 0]);
+ 			// To get the domain, we need to know the minimum and maximum Mpc and velocity vallues that we'll want to display.
+ 			xScale.domain([
+ 							d3.min(hubble_data, function(nebulae) {
+ 								return nebulae.distance - nebulae.distance_error;
+ 							}),
+ 							d3.max(hubble_data, function(nebulae) {
+ 								return nebulae.distance + nebulae.distance_error;
+ 							})
+ 			]).nice();
+			yScale.domain([
+ 							d3.min(hubble_data, function(nebulae) {
+ 								return nebulae.velocity - nebulae.velocity_error;
+ 							}),
+ 							d3.max(hubble_data, function(nebulae) {
+ 								return nebulae.velocity + nebulae.velocity_error;
+ 							})
+ 			]).nice();
+
+			// Now we add the axes using the scale we set earlier. We must also give the axes, their orientation
+			var xAxis = d3.axisBottom(xScale)
+			var yAxis = d3.axisLeft(yScale)
+
+			// This code selects the g element in chart, and draws the axes and text.
+			chart.append("g")
+				 .attr("transform", "translate(0," + height + ")")
+				 .call(xAxis)
+				 .append("text")
+				 	.attr("x", width)
+				 	.attr("y", -6)
+				 	.attr("stroke", "black")
+				 	.style("text-anchor", "end")
+				 	.text("Distance (Mpc)");
+			chart.append("g")
+				 .call(yAxis)
+				 .append("text")
+				 	.attr("transform", "rotate(-90)")
+				 	.attr("stroke", "black")
+				 	.attr("y", 15)
+				 	.style("text-anchor", "end")
+				 	.text("Red Shift Velocity (km/s)");
+
+			var selection = svg.selectAll("rect")
+							   .data(hubble_data)
+							   .enter().append("rect")
+			selection
+					 .attr("x", function(d) { return (margin.left + xScale(d.distance - d.distance_error)); })
+					 .attr("width", function(d) { return xScale(2 * d.distance_error); })
+					 .attr("y", function(d) { return yScale(d.velocity - d.velocity_error); })
+					 .attr("height", function(d) { return (height - yScale(2 * d.velocity_error)); });
+		</script>
+ 	</body>
+</html>
